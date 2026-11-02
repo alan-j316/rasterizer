@@ -79,6 +79,7 @@ jobs:
                   -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
                   -D ENABLE_STRICT=ON
                   -D ENABLE_TEST=ON
+                  -D SDL_UNIX_CONSOLE_BUILD=ON
                   -S ${{ github.workspace }}
 
             - name: Build

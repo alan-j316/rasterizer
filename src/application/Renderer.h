@@ -128,7 +128,7 @@ namespace demo
          * @param vert1 The second vertex.
          * @param point The point.
          * @return A positive number if the point is above the edge formed by @p vert0 and @p vert1,
-         *         negative number if the poit is below the edge and 0 if the point is on the edge.
+         *         negative number if the point is below the edge and 0 if the point is on the edge.
          */
         template <typename T>
         T edgeCross(const fgm::Vec2<T>& vert0, const fgm::Vec2<T>& vert1, const fgm::Vec2<T>& point)
