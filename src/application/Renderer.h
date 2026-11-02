@@ -16,8 +16,10 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#define FGM_LEFT_HANDED
 #include <fgm/Mat>
 #include <fgm/Vec>
+#include <format>
 #include <iostream>
 #include <map>
 #include <utility>
@@ -59,7 +61,9 @@ namespace demo
               colorChannels(numColorChannels)
         { clearScreen(); }
 
-        void renderLine(float ax, float ay, float bx, float by, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+
+        void renderLine(const float ax, const float ay, const float bx, const float by, const uint8_t r,
+                        const uint8_t g, const uint8_t b, const uint8_t a) const
         {
             for (float t = 0.0f; t <= 1.0f; t += 0.002f)
             {
@@ -124,19 +128,20 @@ namespace demo
          *
          * @tparam T The numeric type of vertices.
          *
-         * @param vert0 The first vertex.
-         * @param vert1 The second vertex.
-         * @param point The point.
+         * @param v0 The first vertex.
+         * @param v1 The second vertex.
+         * @param p The point.
          * @return A positive number if the point is above the edge formed by @p vert0 and @p vert1,
          *         negative number if the point is below the edge and 0 if the point is on the edge.
          */
         template <typename T>
-        T edgeCross(const fgm::Vec2<T>& vert0, const fgm::Vec2<T>& vert1, const fgm::Vec2<T>& point)
+        T edgeCross(const fgm::Vec2<T>& v0, const fgm::Vec2<T>& v1, const fgm::Vec2<T>& p)
         {
             // We are assuming that the edges start from vert0
-            const auto edge0 = vert1 - vert0;
-            const auto edge1 = point - vert0;
-            return edge0.cross(edge1);
+            const auto edge0 = v1 - v0;
+            const auto edge1 = p - v0;
+            // return edge0.cross(edge1); // TODO: Fix
+            return (v1.x() - v0.x()) * (p.y() - v0.y()) - (v1.y() - v0.y()) * (p.x() - v0.x());
         }
 
 
@@ -187,7 +192,7 @@ namespace demo
         }
 
         // bufferOffset must be a multiple of 4 since we need to put 4 channels per bufferOffset
-        inline void putPixel(size_t bufferOffset, uint8_t r, uint8_t g, uint8_t b, uint8_t a = 0xff)
+        inline void putPixel(const size_t bufferOffset, uint8_t r, uint8_t g, uint8_t b, uint8_t a = 0xff)
         {
             if constexpr (std::endian::native == std::endian::big)
             {
@@ -244,9 +249,14 @@ namespace demo
                             const uint8_t r = 0xff, const uint8_t g = 0xff, const uint8_t b = 0xff,
                             const uint8_t a = 0xff)
         {
-            const auto projV0 = toScreenSpace(v0);
-            const auto projV1 = toScreenSpace(v1);
-            const auto projV2 = toScreenSpace(v2);
+            // const auto projV0 = toScreenSpace(v0);
+            // const auto projV1 = toScreenSpace(v1);
+            // const auto projV2 = toScreenSpace(v2);
+
+            const auto projV0 = v0.template swizzle<fgm::axis::X, fgm::axis::Y>();
+            const auto projV1 = v1.template swizzle<fgm::axis::X, fgm::axis::Y>();
+            const auto projV2 = v2.template swizzle<fgm::axis::X, fgm::axis::Y>();
+
 
             // Calculate the bounding box of the triangle
             // (minX, minY)--------
@@ -261,19 +271,20 @@ namespace demo
             auto bb = computeBoundingBox(projV0, projV1, projV2);
 
             // Clip against screen bounds
-            bb.left = std::max(bb.left, 0ull);
-            bb.top = std::max(bb.top, 0ull);
-            bb.right = std::min(bb.right, static_cast<size_t>(width - 1));
+            bb.left   = std::max(bb.left, 0ull);
+            bb.top    = std::max(bb.top, 0ull);
+            bb.right  = std::min(bb.right, static_cast<size_t>(width - 1));
             bb.bottom = std::min(bb.bottom, static_cast<size_t>(height - 1));
 
 
-            const auto triArea = (projV1 - projV0).cross(projV2 - projV1) * 0.5f;
+            // Cross between two edges, v0v1(v1 - v0) and v0v2(v2 - v0)
+            const auto triArea = (projV1 - projV0).cross(projV2 - projV0) * 0.5f;
 
             // Backface culling
-            if (triArea < 0.0f) // Triangle is inverted or less than 1 px
-            {
-                return;
-            }
+            // if (triArea < 0.0f) // Triangle is inverted or less than 1 px
+            // {
+            //     return;
+            // }
 
             // Compute top left for each edge (vertex pair)
             const auto isTopLeft0 = isTopLeftEdge(projV0, projV1);
@@ -284,16 +295,34 @@ namespace demo
             const auto bias1 = isTopLeft1 * EPSILON;
             const auto bias2 = isTopLeft2 * EPSILON;
 
+            // Calculate the barycenter coordinate for the the first point
+            // F01(P) = (a_y - b_y) * Px + (b_x - a_x) * Py + (a_x * b_y - a_y * b_x)
+            // F01(P) =        A_01 * Px +        B_01 * Py + C01
+            // Permutation F01, F12, F20
+            const auto a01 = v0.y() - v1.y();
+            const auto b01 = v1.x() - v0.x();
+            const auto a12 = v1.y() - v2.y();
+            const auto b12 = v2.x() - v1.x();
+            const auto a20 = v2.y() - v0.y();
+            const auto b20 = v0.x() - v2.x();
+
+            const auto p0 = fgm::Vec2F(bb.left, bb.top);
+            auto w0Row    = edgeCross(projV0, projV1, p0);
+            auto w1Row    = edgeCross(projV1, projV2, p0);
+            auto w2Row    = edgeCross(projV2, projV0, p0);
 
 
             // Looping in reverse order for better cache locality
             for (auto y = bb.top; y <= bb.bottom; ++y)
             {
+                auto w0 = w0Row;
+                auto w1 = w1Row;
+                auto w2 = w2Row;
                 for (auto x = bb.left; x <= bb.right; ++x)
                 {
                     const auto offset      = y * static_cast<size_t>(width) + x;
                     const auto colorOffset = static_cast<size_t>(colorChannels) * offset;
-                    const auto point       = fgm::Vec2(static_cast<float>(x), static_cast<float>(y));
+                    const auto point       = fgm::Vec2F(x, y);
 
                     if (offset > static_cast<size_t>(width * height))
                     {
@@ -306,12 +335,20 @@ namespace demo
                     const auto currentPixelDepth = alpha * v0.z() + beta * v1.z() + gamma * v2.z();
 
                     // A comparison of anything other than 0.0f, like 1e-5 or 1e-10 will cause visual glitches
-                    const bool eC0 = edgeCross(projV0, projV1, point) - bias0 >= 0.0f;
-                    const bool eC1 = edgeCross(projV1, projV2, point) - bias1 >= 0.0f;
-                    const bool eC2 = edgeCross(projV2, projV0, point) - bias2 >= 0.0f;
+                    const bool eC0 = w0 - bias0 >= 0.0f;
+                    const bool eC1 = w1 - bias1 >= 0.0f;
+                    const bool eC2 = w2 - bias2 >= 0.0f;
+                    // if (w0 > 0.0 && w1 > 0.0 && w2 > 0.0)
+                    // {
+                    //     std::cout << std::format("w0 {} w1 {} w2 {}\n", w0, w1, w2);
+                    // }
 
+                    // auto w02    = edgeCross(projV1, projV2, point);
+                    // auto w12    = edgeCross(projV2, projV0, point);
+                    // auto w22    = edgeCross(projV0, projV2, point);
                     // Edge cross && Depth buffer-based culling
-                    if (eC0 && eC1 && eC2 && currentPixelDepth > depthBuffer[offset])
+                    if (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0)
+                    // if (eC0 && eC1 && eC2 && currentPixelDepth > depthBuffer[offset])
                     {
                         // Color Rendering
                         putPixel(colorOffset, r, g, b, a);
@@ -323,7 +360,14 @@ namespace demo
                         // const auto depthColor = static_cast<uint8_t>(depthBuffer[offset] * 255);
                         // putPixel(colorOffset, depthColor, depthColor, depthColor);
                     }
+
+                    w0 += a01;
+                    w1 += a12;
+                    w2 += a20;
                 }
+                w0Row += b01;
+                w1Row += b12;
+                w2Row += b20;
             }
         }
 
@@ -385,7 +429,10 @@ namespace demo
                 renderTriangle(vertices[i0], vertices[i1], vertices[i2], faceColor.r(), faceColor.g(), faceColor.b(),
                                0xff);
                 // renderTriangle(vertices[i0], vertices[i1], vertices[i2], 0xff, 0xff, 0xff, 0xff);
-                // renderTriangleWireframe(vertices[i0], vertices[i1], vertices[i2]);
+                const auto v0 = vertices[i0].swizzle<fgm::axis::X, fgm::axis::Y>();
+                const auto v1 = vertices[i1].swizzle<fgm::axis::X, fgm::axis::Y>();
+                const auto v2 = vertices[i2].swizzle<fgm::axis::X, fgm::axis::Y>();
+                renderTriangleWireframe(v0, v1, v2);
             }
         }
     };
