@@ -217,20 +217,24 @@ namespace demo
         template <typename T>
         fgm::Vec2<T> toScreenSpace(const fgm::Vec3<T>& vec) const
         {
+            // Convert from -1 to 1 to 0 to 2
+            // Then from 0 to 2 to 0 to 1
+            // Finally multiply it screen width and height
             return fgm::Vec2<T>{
-                width - vec.x() * width,
-                height - vec.y() * height,
+                (vec.x() + 1) * 0.5f * width,
+                (vec.y() + 1) * 0.5f * height,
             };
         }
 
 
-        template <typename T>
-        static fgm::Vec3<T> toNDC(const fgm::Vec3<T>& vec, const fgm::Vec3F& minValueVec, const fgm::Vec3F& maxValueVec)
-        {
-            return fgm::Vec3<T>{ static_cast<T>((vec.x() - minValueVec.x()) / (maxValueVec.x() - minValueVec.x())),
-                                 static_cast<T>((vec.y() - minValueVec.y()) / (maxValueVec.y() - minValueVec.y())),
-                                 static_cast<T>((vec.z() - minValueVec.z()) / (maxValueVec.z() - minValueVec.z())) };
-        }
+        // template <typename T>
+        // static fgm::Vec3<T> toNDC(const fgm::Vec3<T>& vec, const fgm::Vec3F& minValueVec, const fgm::Vec3F&
+        // maxValueVec)
+        // {
+        //     return fgm::Vec3<T>{ static_cast<T>((vec.x() - minValueVec.x()) / (maxValueVec.x() - minValueVec.x())),
+        //                          static_cast<T>((vec.y() - minValueVec.y()) / (maxValueVec.y() - minValueVec.y())),
+        //                          static_cast<T>((vec.z() - minValueVec.z()) / (maxValueVec.z() - minValueVec.z())) };
+        // }
 
         inline BoundingBox computeBoundingBox(const fgm::Vec2F& v0, const fgm::Vec2F& v1, const fgm::Vec2F& v2)
         {
@@ -281,10 +285,10 @@ namespace demo
             const auto triArea = (projV1 - projV0).cross(projV2 - projV0) * 0.5f;
 
             // Backface culling
-            // if (triArea < 0.0f) // Triangle is inverted or less than 1 px
-            // {
-            //     return;
-            // }
+            if (triArea < 0.0f) // Triangle is inverted or less than 1 px
+            {
+                return;
+            }
 
             // Compute top left for each edge (vertex pair)
             const auto isTopLeft0 = isTopLeftEdge(projV0, projV1);
@@ -343,6 +347,7 @@ namespace demo
                     //     std::cout << std::format("w0 {} w1 {} w2 {}\n", w0, w1, w2);
                     // }
 
+                    // putPixel(colorOffset, r, g, b, a);
                     // auto w02    = edgeCross(projV1, projV2, point);
                     // auto w12    = edgeCross(projV2, projV0, point);
                     // auto w22    = edgeCross(projV0, projV2, point);
@@ -383,12 +388,29 @@ namespace demo
             return vec;
         }
 
+        inline fgm::Mat4F makeOrtho(float top, float bottom, float left, float right, float near, float far)
+        {
+            return fgm::Mat4F(2 / (right - left), 0, 0, -(right + left) / (right - left), 0, 2 / (top - bottom), 0,
+                              -(top + bottom) / (top - bottom), 0, 0, -2 / (far - near), -(far + near) / (far - near),
+                              0, 0, 0, 1);
+        }
+
         // Vertex Shader
         inline fgm::Vec3F perVertex(const fgm::Vec3F& vertex, const fgm::Vec3F& minVertexValues,
                                     const fgm::Vec3F& maxVertexValues, const float rotationDeg)
         {
-            const auto vec = fgm::Mat4F::makeRotationY(rotationDeg) * fgm::Vec4(vertex, 1.0f);
-            return toNDC(vec.swizzle<fgm::axis::X, fgm::axis::Y, fgm::axis::Z>(), minVertexValues, maxVertexValues);
+            const auto proj = makeOrtho(-1, 1, -1, 1, 0, 1);
+            // Projection to NDC
+            auto vec  = proj * fgm::Vec4(vertex, 1.0f);
+            // To screen space/viewport space
+            vec.x() = (vec.x() + 1) * width * 0.5f;
+            vec.y() = (vec.y() + 1) * height * 0.5f;
+            if (vec.x() > 100 || vec.y() > 100)
+            {
+                std::cout << vec << '\n';
+            }
+            return vec.swizzle<fgm::axis::X, fgm::axis::Y, fgm::axis::Z>();
+            // return toNDC(vec.swizzle<fgm::axis::X, fgm::axis::Y, fgm::axis::Z>(), minVertexValues, maxVertexValues);
         }
 
 
@@ -432,7 +454,7 @@ namespace demo
                 const auto v0 = vertices[i0].swizzle<fgm::axis::X, fgm::axis::Y>();
                 const auto v1 = vertices[i1].swizzle<fgm::axis::X, fgm::axis::Y>();
                 const auto v2 = vertices[i2].swizzle<fgm::axis::X, fgm::axis::Y>();
-                renderTriangleWireframe(v0, v1, v2);
+                // renderTriangleWireframe(v0, v1, v2);
             }
         }
     };
