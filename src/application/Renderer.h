@@ -403,7 +403,7 @@ namespace demo
             // Projection to NDC
             auto vec  = proj * fgm::Vec4(vertex, 1.0f);
             // To screen space/viewport space
-            vec.x() = (vec.x() + 1) * width * 0.5f;
+            vec.x() = (1 - vec.x()) * width * 0.5f;
             vec.y() = (vec.y() + 1) * height * 0.5f;
             if (vec.x() > 100 || vec.y() > 100)
             {
