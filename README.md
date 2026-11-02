@@ -1,4 +1,4 @@
-[![Unit Tests](https://github.com/alanabrahampkochumon-zqict/CPP_Project_Template/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/alanabrahampkochumon-zqict/CPP_Project_Template/actions/workflows/unit-tests.yml)
+[![Builds](https://github.com/alan-j316/rasterizer/actions/workflows/builds.yml/badge.svg)](https://github.com/alan-j316/rasterizer/actions/workflows/builds.yml)
 
 # Modern C++ Project Template
 
