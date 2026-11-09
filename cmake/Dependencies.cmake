@@ -20,8 +20,8 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-        fgm
-        GIT_REPOSITORY https://github.com/alanabrahampkochumon-zqict/falcon-game-math.git
+        Falcon
+        GIT_REPOSITORY https://github.com/alan-j316/falcon-game-math.git
         GIT_TAG d16224b0c8112c21a565fb84e5b0686358652176
         SYSTEM
 )
@@ -52,7 +52,7 @@ set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE) # Disables google benchmar
 
 FetchContent_MakeAvailable(google-test)
 FetchContent_MakeAvailable(google-benchmark)
-FetchContent_MakeAvailable(fgm)
+FetchContent_MakeAvailable(Falcon)
 FetchContent_MakeAvailable(sdl3)
 FetchContent_MakeAvailable(fast-float)
 FetchContent_MakeAvailable(fast-gltf)

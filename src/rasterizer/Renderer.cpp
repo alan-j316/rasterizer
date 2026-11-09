@@ -281,20 +281,11 @@ namespace rasterizer
     void Renderer::render(const Mesh& mesh, const float deg) noexcept
     {
         std::vector<flcn::Vec3<float>> vertices{ mesh.vertices.size() };
-        // const auto focalLength = 3.0f;
 
         std::ranges::transform(mesh.vertices, std::inserter(vertices, vertices.begin()),
                                [mesh, this, deg](const flcn::Vec3<float> vertex) {
                                    return perVertex(vertex, deg);
                                });
-
-        // std::ranges::transform(mesh.vertices, std::inserter(vertices, vertices.begin()),
-        //                [this, mesh](const flcn::Vec3<float> vertex) {
-        //                    const auto vec = project(vertex, 3.0f);
-        //                    const auto proj = toNDC(vec, mesh.minVertexValue, mesh.maxVertexValue);
-        //                    // const auto vec = rotateY(vertex, deg);
-        //                    return proj;
-        //                });
 
         [[maybe_unused]] size_t i = 0;
         for (const auto& index : mesh.indices)
@@ -306,9 +297,9 @@ namespace rasterizer
             const auto faceColor = mesh.colors[i++];
             renderTriangle(vertices[i0], vertices[i1], vertices[i2], faceColor.r(), faceColor.g(), faceColor.b(), 0xff);
             // renderTriangle(vertices[i0], vertices[i1], vertices[i2], 0xff, 0xff, 0xff, 0xff);
-            const auto v0 = vertices[i0].swizzle<flcn::axis::X, flcn::axis::Y>();
-            const auto v1 = vertices[i1].swizzle<flcn::axis::X, flcn::axis::Y>();
-            const auto v2 = vertices[i2].swizzle<flcn::axis::X, flcn::axis::Y>();
+            // const auto v0 = vertices[i0].swizzle<flcn::axis::X, flcn::axis::Y>();
+            // const auto v1 = vertices[i1].swizzle<flcn::axis::X, flcn::axis::Y>();
+            // const auto v2 = vertices[i2].swizzle<flcn::axis::X, flcn::axis::Y>();
             // renderTriangleWireframe(v0, v1, v2);
         }
     }

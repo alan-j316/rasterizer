@@ -133,7 +133,7 @@ namespace rasterizer
          */
         static BarycentricCoordinates computeBaryCentricCoordinates(const flcn::CVec2F& v0, const flcn::CVec2F& v1,
                                                                     const flcn::CVec2F& v2, const flcn::CVec2F& point,
-                                                                    const float triArea) noexcept;
+                                                                    float triArea) noexcept;
 
 
         /**
@@ -194,21 +194,26 @@ namespace rasterizer
          * @param a The alpha-channel of the triangle.
          */
         template <typename T>
-        void renderTriangle(const flcn::Vec3<T>& v0, const flcn::Vec3<T>& v1, const flcn::Vec3<T>& v2,
-                            uint8_t r = 0xff, uint8_t g = 0xff, uint8_t b = 0xff,
-                            uint8_t a = 0xff) const noexcept;
+        void renderTriangle(const flcn::Vec3<T>& v0, const flcn::Vec3<T>& v1, const flcn::Vec3<T>& v2, uint8_t r = 0xff,
+                            uint8_t g = 0xff, uint8_t b = 0xff, uint8_t a = 0xff) const noexcept;
 
 
         // TODO: REMOVE TEMPORARY METHOD
-        inline flcn::Mat4F makeOrtho(float top, float bottom, float left, float right, float near, float far)
+        inline flcn::Mat4F makeOrtho(const float top, const float bottom, const float left, const float right,
+                                     const float near, const float far)
         {
             return flcn::Mat4F(2 / (right - left), 0, 0, -(right + left) / (right - left), 0, 2 / (top - bottom), 0,
                                -(top + bottom) / (top - bottom), 0, 0, -2 / (far - near), -(far + near) / (far - near),
                                0, 0, 0, 1);
         }
 
+        struct VertexArgs
+        {
+            // TODO: Fill with arguments.
+        };
+
         // Vertex Shader
-        flcn::Vec3F perVertex(const flcn::Vec3F& vertex, [[maybe_unused]] const float rotationDeg)
+        flcn::Vec3F perVertex(const flcn::Vec3F& vertex, const VertexArgs& args)
         {
             const auto proj = makeOrtho(-1, 1, -1, 1, 0, 1);
             // Projection to NDC
@@ -220,16 +225,30 @@ namespace rasterizer
         }
 
 
-        /**
-         * @brief Renders a mesh to the current @p frameBuffer.
-         *
-         * @note Blitting is not performed by the renderer, the user will need to blit the framebuffer
-         *       to the target surface.
-         *
-         * @param mesh The mesh to render.
-         */
-        void render(const Mesh& mesh, [[maybe_unused]] float deg) noexcept;
-    };
+        struct PixelArgs
+        {
+            // TODO: Fill with arguments.};
+
+            /**
+             * Perform transformation on a per-pixel level.
+             * @param pixel The pixel to process.
+             * @param args  The argument to fragment shader.
+             * @return
+             */
+            flcn::Vec2F perPixel(const flcn::Vec2F& pixel, const PixelArgs& args) { return pixel; }
 
 
-} // namespace rasterizer
+
+            /**
+             * @brief Renders a mesh to the current @p frameBuffer.
+             *
+             * @note Blitting is not performed by the renderer, the user will need to blit the framebuffer
+             *       to the target surface.
+             *
+             * @param mesh The mesh to render.
+             */
+            void render(const Mesh& mesh, [[maybe_unused]] float deg) noexcept;
+        };
+
+
+    } // namespace rasterizer
