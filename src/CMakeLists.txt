@@ -7,6 +7,16 @@ target_sources(
         Rasterizer
         PRIVATE
         Main.cpp
+        rasterizer/Renderer.cpp
+        rasterizer/Application.cpp
+
+        PRIVATE
+        FILE_SET HEADERS
+        BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+        FILES
+        rasterizer/Renderer.h
+        rasterizer/parsers/ObjectParser.h
+        rasterizer/Mesh.h
 )
 
 target_include_directories(

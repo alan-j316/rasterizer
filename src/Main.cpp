@@ -9,10 +9,10 @@
  */
 
 
-#include "application/Application.h"
+#include "rasterizer/Application.h"
 
 int main()
 {
-    demo::Application application("Software Rasterizer", "1.0.0", "com.fgm.rasterizer");
+    rasterizer::Application application("Software Rasterizer", "1.0.0", "com.fgm.rasterizer");
     application.run();
 }

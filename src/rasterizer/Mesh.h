@@ -14,7 +14,7 @@
 #include <vector>
 
 
-namespace demo
+namespace rasterizer
 {
     class Mesh
     {

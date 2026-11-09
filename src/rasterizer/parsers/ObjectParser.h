@@ -10,20 +10,20 @@
  */
 
 
-#include "application/Mesh.h"
+#include "rasterizer/Mesh.h"
 
 #include <charconv>
 #include <cstdlib>
+#include <falcon/Falcon.h>
 #include <fast_float/fast_float.h>
 #include <fstream>
 #include <iostream>
 #include <ranges>
 #include <string>
-#include <falcon/Falcon.h>
 #include <string_view>
 
 
-namespace demo
+namespace rasterizer
 {
     class ObjectParser
     {
@@ -125,4 +125,4 @@ namespace demo
         }
     };
 
-} // namespace demo
+} // namespace rasterizer
