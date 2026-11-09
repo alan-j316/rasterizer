@@ -17,6 +17,7 @@ target_sources(
         rasterizer/Renderer.h
         rasterizer/parsers/ObjectParser.h
         rasterizer/Mesh.h
+        rasterizer/Application.h
 )
 
 target_include_directories(
@@ -35,6 +36,9 @@ target_link_libraries(
         fastgltf::fastgltf
         # Rasterizer-StrictWarnings # TODO: Add back after fixing warnings
         # Rasterizer-ProjectSanitizers # TODO: Add back after fixing warnings
+
+        PUBLIC
+        DearImGui::DearImGui
 )
 AddCompilerFlag(Rasterizer PRIVATE "AUTO")
 

@@ -284,7 +284,7 @@ namespace rasterizer
 
         std::ranges::transform(mesh.vertices, std::inserter(vertices, vertices.begin()),
                                [mesh, this, deg](const flcn::Vec3<float> vertex) {
-                                   return perVertex(vertex, deg);
+                                   return perVertex(vertex, {});
                                });
 
         [[maybe_unused]] size_t i = 0;

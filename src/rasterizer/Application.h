@@ -15,9 +15,6 @@
 #include "rasterizer/Renderer.h"
 
 #include <SDL3/SDL.h>
-#include <chrono>
-#include <filesystem>
-#include <string>
 
 namespace rasterizer
 {
@@ -32,6 +29,8 @@ namespace rasterizer
 
     private:
         SDL_Window* _window{ nullptr };
+        SDL_GPUDevice* _device;
+
         bool _isRunning{ false };
         int _width{ 1280 }, _height{ 720 }, _colorChannels{ 4 }; // TODO: Update to use ctd.
         Renderer _renderer;

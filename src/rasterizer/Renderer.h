@@ -199,7 +199,7 @@ namespace rasterizer
 
 
         // TODO: REMOVE TEMPORARY METHOD
-        inline flcn::Mat4F makeOrtho(const float top, const float bottom, const float left, const float right,
+        flcn::Mat4F makeOrtho(const float top, const float bottom, const float left, const float right,
                                      const float near, const float far)
         {
             return flcn::Mat4F(2 / (right - left), 0, 0, -(right + left) / (right - left), 0, 2 / (top - bottom), 0,
@@ -228,27 +228,27 @@ namespace rasterizer
         struct PixelArgs
         {
             // TODO: Fill with arguments.};
-
-            /**
-             * Perform transformation on a per-pixel level.
-             * @param pixel The pixel to process.
-             * @param args  The argument to fragment shader.
-             * @return
-             */
-            flcn::Vec2F perPixel(const flcn::Vec2F& pixel, const PixelArgs& args) { return pixel; }
-
-
-
-            /**
-             * @brief Renders a mesh to the current @p frameBuffer.
-             *
-             * @note Blitting is not performed by the renderer, the user will need to blit the framebuffer
-             *       to the target surface.
-             *
-             * @param mesh The mesh to render.
-             */
-            void render(const Mesh& mesh, [[maybe_unused]] float deg) noexcept;
         };
+        /**
+         * Perform transformation on a per-pixel level.
+         * @param pixel The pixel to process.
+         * @param args  The argument to fragment shader.
+         * @return
+         */
+        flcn::Vec2F perPixel(const flcn::Vec2F& pixel, const PixelArgs& args) { return pixel; }
 
 
-    } // namespace rasterizer
+
+        /**
+         * @brief Renders a mesh to the current @p frameBuffer.
+         *
+         * @note Blitting is not performed by the renderer, the user will need to blit the framebuffer
+         *       to the target surface.
+         *
+         * @param mesh The mesh to render.
+         */
+        void render(const Mesh& mesh, [[maybe_unused]] float deg) noexcept;
+    };
+
+
+} // namespace rasterizer
