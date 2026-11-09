@@ -19,6 +19,7 @@
 #include <iostream>
 #include <ranges>
 #include <string>
+#include <falcon/Falcon.h>
 #include <string_view>
 
 
@@ -60,7 +61,7 @@ namespace demo
                 {
                     // Vertex
                     auto vertexIterator = std::views::split(line, ' ') | std::views::drop(1);
-                    fgm::Vec3<float> vertexData;
+                    flcn::Vec3<float> vertexData;
                     size_t index = 0;
                     for (const auto token : vertexIterator)
                     {
@@ -104,7 +105,7 @@ namespace demo
                     {
                         // Note: -1 is subtracted since obj file uses 1-based indexing
                         // Clang on Linux throws class template deduction failed error without typename passed-in
-                        auto vec = fgm::Vec3I(temp[0] - 1, temp[i - 1] - 1, temp[i] - 1);
+                        auto vec = flcn::Vec3I(temp[0] - 1, temp[i - 1] - 1, temp[i] - 1);
                         mesh.indices.push_back(vec);
 
                         // TODO: Remove after testing
@@ -112,7 +113,7 @@ namespace demo
                         const auto r        = static_cast<uint8_t>(std::rand() % 255);
                         const auto g        = static_cast<uint8_t>(std::rand() % 255);
                         const auto b        = static_cast<uint8_t>(std::rand() % 255);
-                        const auto colorVec = fgm::Vec3UB{ r, g, b };
+                        const auto colorVec = flcn::Vec3UB{ r, g, b };
                         mesh.colors.push_back(colorVec);
                     }
                 }

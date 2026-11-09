@@ -78,9 +78,9 @@ namespace demo
 
             _renderer.clearScreen();
             _renderer.render(mesh, 0.0f);
-            // _renderer.renderTriangleWireframe(fgm::Vec2F{400, 400}, fgm::Vec2F{700, 100}, fgm::Vec2F{100, 100});
-            // _renderer.renderTriangleWireframe(fgm::Vec2F{100, 400}, fgm::Vec2F{400, 400}, fgm::Vec2F{10, 10} );
-             // _renderer.renderTriangle( fgm::Vec3F{400, 400, 1}, fgm::Vec3F{100, 400, 1}, fgm::Vec3F{10, 10, 1} );
+            // _renderer.renderTriangleWireframe(flcn::Vec2F{400, 400}, flcn::Vec2F{700, 100}, flcn::Vec2F{100, 100});
+            // _renderer.renderTriangleWireframe(flcn::Vec2F{100, 400}, flcn::Vec2F{400, 400}, flcn::Vec2F{10, 10} );
+             // _renderer.renderTriangle( flcn::Vec3F{400, 400, 1}, flcn::Vec3F{100, 400, 1}, flcn::Vec3F{10, 10, 1} );
 
             float rotationAngle = 0.0f;
             while (_isRunning)

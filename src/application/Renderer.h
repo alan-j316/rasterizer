@@ -16,9 +16,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#define FGM_LEFT_HANDED
-#include <fgm/Mat>
-#include <fgm/Vec>
+#include <falcon/Falcon.h>
 #include <format>
 #include <iostream>
 #include <map>
@@ -88,7 +86,7 @@ namespace demo
         }
 
         template <typename T>
-        void renderTriangleWireframe(const fgm::Vec2<T>& v0, const fgm::Vec2<T>& v1, const fgm::Vec2<T>& v2)
+        void renderTriangleWireframe(const flcn::Vec2<T>& v0, const flcn::Vec2<T>& v1, const flcn::Vec2<T>& v2)
         {
             renderLine(v0.x(), v0.y(), v1.x(), v1.y(), 0xff, 0xff, 0xff, 0xff);
             renderLine(v1.x(), v1.y(), v2.x(), v2.y(), 0xff, 0xff, 0xff, 0xff);
@@ -135,7 +133,7 @@ namespace demo
          *         negative number if the point is below the edge and 0 if the point is on the edge.
          */
         template <typename T>
-        T edgeCross(const fgm::Vec2<T>& v0, const fgm::Vec2<T>& v1, const fgm::Vec2<T>& p)
+        T edgeCross(const flcn::CVec2<T>& v0, const flcn::CVec2<T>& v1, const flcn::CVec2<T>& p)
         {
             // We are assuming that the edges start from vert0
             const auto edge0 = v1 - v0;
@@ -145,8 +143,8 @@ namespace demo
         }
 
 
-        BarycentricCoordinates computeBaryCentricCoordinates(const fgm::Vec2F& v0, const fgm::Vec2F& v1,
-                                                             const fgm::Vec2F& v2, const fgm::Vec2F& point)
+        BarycentricCoordinates computeBaryCentricCoordinates(const flcn::Vec2F& v0, const flcn::Vec2F& v1,
+                                                             const flcn::Vec2F& v2, const flcn::Vec2F& point)
         {
             // Division by two is omitted since that is common in smaller triangles area too
             const auto triArea   = (v1 - v0).cross(v2 - v1);
@@ -159,8 +157,8 @@ namespace demo
                                            .gamma = gammaArea / triArea };
         }
 
-        BarycentricCoordinates computeBaryCentricCoordinates(const fgm::Vec2F& v0, const fgm::Vec2F& v1,
-                                                             const fgm::Vec2F& v2, const fgm::Vec2F& point,
+        BarycentricCoordinates computeBaryCentricCoordinates(const flcn::CVec2F& v0, const flcn::CVec2F& v1,
+                                                             const flcn::CVec2F& v2, const flcn::CVec2F& point,
                                                              const float triArea)
         {
             const auto alphaArea = 0.5f * (v2 - v1).cross(point - v1);
@@ -179,7 +177,7 @@ namespace demo
          * @param v1 The second vertex of the edge.
          * @return `true` if the edge is a top or left edge else `false`.
          */
-        bool isTopLeftEdge(const fgm::Vec2<float>& v0, const fgm::Vec2<float>& v1)
+        bool isTopLeftEdge(const flcn::CVec2F& v0, const flcn::CVec2F& v1)
         {
             const auto edge = v1 - v0;
             // Top Left if edge's x coordinate is positive (negative is bottom edge due to clockwise convention used)
@@ -215,12 +213,12 @@ namespace demo
         // minValue-> Lowest vertex value
         // maxValue -> Highest vertex value
         template <typename T>
-        fgm::Vec2<T> toScreenSpace(const fgm::Vec3<T>& vec) const
+        flcn::Vec2<T> toScreenSpace(const flcn::Vec3<T>& vec) const
         {
             // Convert from -1 to 1 to 0 to 2
             // Then from 0 to 2 to 0 to 1
             // Finally multiply it screen width and height
-            return fgm::Vec2<T>{
+            return flcn::Vec2<T>{
                 (vec.x() + 1) * 0.5f * width,
                 (vec.y() + 1) * 0.5f * height,
             };
@@ -228,15 +226,15 @@ namespace demo
 
 
         // template <typename T>
-        // static fgm::Vec3<T> toNDC(const fgm::Vec3<T>& vec, const fgm::Vec3F& minValueVec, const fgm::Vec3F&
+        // static flcn::Vec3<T> toNDC(const flcn::Vec3<T>& vec, const flcn::Vec3F& minValueVec, const flcn::Vec3F&
         // maxValueVec)
         // {
-        //     return fgm::Vec3<T>{ static_cast<T>((vec.x() - minValueVec.x()) / (maxValueVec.x() - minValueVec.x())),
+        //     return flcn::Vec3<T>{ static_cast<T>((vec.x() - minValueVec.x()) / (maxValueVec.x() - minValueVec.x())),
         //                          static_cast<T>((vec.y() - minValueVec.y()) / (maxValueVec.y() - minValueVec.y())),
         //                          static_cast<T>((vec.z() - minValueVec.z()) / (maxValueVec.z() - minValueVec.z())) };
         // }
 
-        inline BoundingBox computeBoundingBox(const fgm::Vec2F& v0, const fgm::Vec2F& v1, const fgm::Vec2F& v2)
+        inline BoundingBox computeBoundingBox(const flcn::CVec2F& v0, const flcn::CVec2F& v1, const flcn::CVec2F& v2)
         {
             return BoundingBox{
                 .top    = static_cast<size_t>(std::min({ v0.y(), v1.y(), v2.y() })),
@@ -249,17 +247,16 @@ namespace demo
 
         // TODO: Add docs
         template <typename T>
-        void renderTriangle(const fgm::Vec3<T>& v0, const fgm::Vec3<T>& v1, const fgm::Vec3<T>& v2,
+        void renderTriangle(const flcn::Vec3<T>& v0, const flcn::Vec3<T>& v1, const flcn::Vec3<T>& v2,
                             const uint8_t r = 0xff, const uint8_t g = 0xff, const uint8_t b = 0xff,
                             const uint8_t a = 0xff)
         {
             // const auto projV0 = toScreenSpace(v0);
             // const auto projV1 = toScreenSpace(v1);
             // const auto projV2 = toScreenSpace(v2);
-
-            const auto projV0 = v0.template swizzle<fgm::axis::X, fgm::axis::Y>();
-            const auto projV1 = v1.template swizzle<fgm::axis::X, fgm::axis::Y>();
-            const auto projV2 = v2.template swizzle<fgm::axis::X, fgm::axis::Y>();
+            const auto projV0 = v0.template swizzle<flcn::axis::X, flcn::axis::Y>();
+            const auto projV1 = v1.template swizzle<flcn::axis::X, flcn::axis::Y>();
+            const auto projV2 = v2.template swizzle<flcn::axis::X, flcn::axis::Y>();
 
 
             // Calculate the bounding box of the triangle
@@ -310,7 +307,7 @@ namespace demo
             const auto a20 = v2.y() - v0.y();
             const auto b20 = v0.x() - v2.x();
 
-            const auto p0 = fgm::Vec2F(bb.left, bb.top);
+            const auto p0 = flcn::CVec2F(bb.left, bb.top);
             auto w0Row    = edgeCross(projV0, projV1, p0);
             auto w1Row    = edgeCross(projV1, projV2, p0);
             auto w2Row    = edgeCross(projV2, projV0, p0);
@@ -326,7 +323,7 @@ namespace demo
                 {
                     const auto offset      = y * static_cast<size_t>(width) + x;
                     const auto colorOffset = static_cast<size_t>(colorChannels) * offset;
-                    const auto point       = fgm::Vec2F(x, y);
+                    const auto point       = flcn::CVec2F(x, y);
 
                     if (offset > static_cast<size_t>(width * height))
                     {
@@ -376,9 +373,9 @@ namespace demo
             }
         }
 
-        fgm::Vec3F project(const fgm::Vec3F& vertex, const float focalLength)
+        flcn::Vec3F project(const flcn::Vec3F& vertex, const float focalLength)
         {
-            fgm::Vec3F vec{};
+            flcn::Vec3F vec{};
             const auto factor = focalLength / vertex.z();
 
             vec.x() = vertex.x() * factor;
@@ -388,29 +385,26 @@ namespace demo
             return vec;
         }
 
-        inline fgm::Mat4F makeOrtho(float top, float bottom, float left, float right, float near, float far)
+        inline flcn::Mat4F makeOrtho(float top, float bottom, float left, float right, float near, float far)
         {
-            return fgm::Mat4F(2 / (right - left), 0, 0, -(right + left) / (right - left), 0, 2 / (top - bottom), 0,
-                              -(top + bottom) / (top - bottom), 0, 0, -2 / (far - near), -(far + near) / (far - near),
-                              0, 0, 0, 1);
+            return flcn::Mat4F(2 / (right - left), 0, 0, -(right + left) / (right - left), 0, 2 / (top - bottom), 0,
+                               -(top + bottom) / (top - bottom), 0, 0, -2 / (far - near), -(far + near) / (far - near),
+                               0, 0, 0, 1);
         }
 
         // Vertex Shader
-        inline fgm::Vec3F perVertex(const fgm::Vec3F& vertex, const fgm::Vec3F& minVertexValues,
-                                    const fgm::Vec3F& maxVertexValues, const float rotationDeg)
+        inline flcn::Vec3F perVertex(const flcn::Vec3F& vertex, const flcn::Vec3F& minVertexValues,
+                                     const flcn::Vec3F& maxVertexValues, const float rotationDeg)
         {
             const auto proj = makeOrtho(-1, 1, -1, 1, 0, 1);
             // Projection to NDC
-            auto vec  = proj * fgm::Vec4(vertex, 1.0f);
+            auto vec = proj * flcn::Vec4(vertex, 1.0f);
             // To screen space/viewport space
             vec.x() = (1 - vec.x()) * width * 0.5f;
             vec.y() = (vec.y() + 1) * height * 0.5f;
-            if (vec.x() > 100 || vec.y() > 100)
-            {
-                std::cout << vec << '\n';
-            }
-            return vec.swizzle<fgm::axis::X, fgm::axis::Y, fgm::axis::Z>();
-            // return toNDC(vec.swizzle<fgm::axis::X, fgm::axis::Y, fgm::axis::Z>(), minVertexValues, maxVertexValues);
+            return vec.swizzle<flcn::axis::X, flcn::axis::Y, flcn::axis::Z>();
+            // return toNDC(vec.swizzle<flcn::axis::X, flcn::axis::Y, flcn::axis::Z>(), minVertexValues,
+            // maxVertexValues);
         }
 
 
@@ -424,16 +418,16 @@ namespace demo
          */
         void render(const Mesh& mesh, [[maybe_unused]] const float deg)
         {
-            std::vector<fgm::Vec3<float>> vertices{ mesh.vertices.size() };
+            std::vector<flcn::Vec3<float>> vertices{ mesh.vertices.size() };
             // const auto focalLength = 3.0f;
 
             std::ranges::transform(mesh.vertices, std::inserter(vertices, vertices.begin()),
-                                   [mesh, this, deg](const fgm::Vec3<float> vertex) {
+                                   [mesh, this, deg](const flcn::Vec3<float> vertex) {
                                        return perVertex(vertex, mesh.minVertexValue, mesh.maxVertexValue, deg);
                                    });
 
             // std::ranges::transform(mesh.vertices, std::inserter(vertices, vertices.begin()),
-            //                [this, mesh](const fgm::Vec3<float> vertex) {
+            //                [this, mesh](const flcn::Vec3<float> vertex) {
             //                    const auto vec = project(vertex, 3.0f);
             //                    const auto proj = toNDC(vec, mesh.minVertexValue, mesh.maxVertexValue);
             //                    // const auto vec = rotateY(vertex, deg);
@@ -451,9 +445,9 @@ namespace demo
                 renderTriangle(vertices[i0], vertices[i1], vertices[i2], faceColor.r(), faceColor.g(), faceColor.b(),
                                0xff);
                 // renderTriangle(vertices[i0], vertices[i1], vertices[i2], 0xff, 0xff, 0xff, 0xff);
-                const auto v0 = vertices[i0].swizzle<fgm::axis::X, fgm::axis::Y>();
-                const auto v1 = vertices[i1].swizzle<fgm::axis::X, fgm::axis::Y>();
-                const auto v2 = vertices[i2].swizzle<fgm::axis::X, fgm::axis::Y>();
+                const auto v0 = vertices[i0].swizzle<flcn::axis::X, flcn::axis::Y>();
+                const auto v1 = vertices[i1].swizzle<flcn::axis::X, flcn::axis::Y>();
+                const auto v2 = vertices[i2].swizzle<flcn::axis::X, flcn::axis::Y>();
                 // renderTriangleWireframe(v0, v1, v2);
             }
         }

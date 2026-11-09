@@ -19,13 +19,14 @@ target_include_directories(
 target_link_libraries(
         Rasterizer
         PRIVATE
-        FGM
+        Falcon::Falcon
         SDL3::SDL3
         fast_float
         fastgltf::fastgltf
-        StrictWarnings
-        ProjectSanitizers
+        # Rasterizer-StrictWarnings # TODO: Add back after fixing warnings
+        # Rasterizer-ProjectSanitizers # TODO: Add back after fixing warnings
 )
+AddCompilerFlag(Rasterizer PRIVATE "AUTO")
 
 # Copy models directory to the build directory
 add_custom_command(

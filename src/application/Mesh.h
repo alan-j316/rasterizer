@@ -10,7 +10,7 @@
  */
 
 
-#include <fgm/Vec>
+#include <falcon/Falcon.h>
 #include <vector>
 
 
@@ -19,11 +19,12 @@ namespace demo
     class Mesh
     {
     public:
-        std::vector<fgm::Vec3F> vertices{};
-        // std::vector<fgm::Vector3<int>> colors{};
-        std::vector<fgm::Vec3I> indices{};
-        std::vector<fgm::Vec3<uint8_t>> colors{};
-        fgm::Vec3F minVertexValue{ fgm::constants::INFINITY_F, fgm::constants::INFINITY_F, fgm::constants::INFINITY_F },
-            maxVertexValue{ -fgm::constants::INFINITY_F, -fgm::constants::INFINITY_F, -fgm::constants::INFINITY_F };
+        std::vector<flcn::Vec3F> vertices{};
+        // std::vector<flcn::Vector3<int>> colors{};
+        std::vector<flcn::Vec3I> indices{};
+        std::vector<flcn::Vec3<uint8_t>> colors{};
+        flcn::Vec3F minVertexValue{ flcn::constants::INFINITY_F, flcn::constants::INFINITY_F,
+                                    flcn::constants::INFINITY_F },
+            maxVertexValue{ -flcn::constants::INFINITY_F, -flcn::constants::INFINITY_F, -flcn::constants::INFINITY_F };
     };
 } // namespace demo

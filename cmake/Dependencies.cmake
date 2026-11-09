@@ -22,7 +22,7 @@ FetchContent_Declare(
 FetchContent_Declare(
         fgm
         GIT_REPOSITORY https://github.com/alanabrahampkochumon-zqict/falcon-game-math.git
-        GIT_TAG 538f41eeeda7f1d2e61f21c06ea118b7a98b4ddd
+        GIT_TAG d16224b0c8112c21a565fb84e5b0686358652176
         SYSTEM
 )
 
