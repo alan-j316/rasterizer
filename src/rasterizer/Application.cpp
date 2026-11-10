@@ -65,15 +65,34 @@ namespace rasterizer
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // IF using Docking Branch
+        io.ConfigDpiScaleFonts = true;
+
+        // Customization
+        float mainScale   = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImGui::StyleColorsDark();
+        // ImGui::StyleColorsLight();
+        // style.FontSizeBase = 16.0f;           // Default to 13.0f when unspecified, which allows crisp legacy font
+        // for non-4K screens.
+        style.FrameRounding = 3.0f;
+        style.GrabRounding  = 3.0f;
+
+        // Setup scaling
+        style.ScaleAllSizes(mainScale); // Bake a fixed style scale. (until we have a solution for dynamic style
+                                        // scaling, changing this requires resetting Style + calling this again)
+        style.FontScaleDpi =
+            mainScale; // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically
+                       // overrides this for every window depending on the current monitor)
+
 
         // Setup Platform/Renderer backends
         ImGui_ImplSDL3_InitForSDLGPU(_window);
         ImGui_ImplSDLGPU3_InitInfo imguiInitInfo = {};
         imguiInitInfo.Device                     = _device;
         imguiInitInfo.ColorTargetFormat          = SDL_GetGPUSwapchainTextureFormat(_device, _window);
-        imguiInitInfo.MSAASamples                = SDL_GPU_SAMPLECOUNT_1;            // Only used in multi-viewports mode.
-        imguiInitInfo.SwapchainComposition       = SDL_GPU_SWAPCHAINCOMPOSITION_SDR; // Only used in multi-viewports mode.
-        imguiInitInfo.PresentMode                = SDL_GPU_PRESENTMODE_VSYNC;
+        imguiInitInfo.MSAASamples                = SDL_GPU_SAMPLECOUNT_1;      // Only used in multi-viewports mode.
+        imguiInitInfo.SwapchainComposition = SDL_GPU_SWAPCHAINCOMPOSITION_SDR; // Only used in multi-viewports mode.
+        imguiInitInfo.PresentMode          = SDL_GPU_PRESENTMODE_VSYNC;
         ImGui_ImplSDLGPU3_Init(&imguiInitInfo);
     }
 
@@ -98,6 +117,102 @@ namespace rasterizer
         }
     }
 
+
+    void Application::renderImgui() noexcept
+    {
+
+        const ImGuiIO& io = ImGui::GetIO();
+        // Start the Dear ImGui frame
+        ImGui_ImplSDLGPU3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
+        bool showDemoWindow    = true;
+        bool showAnotherWindow = true;
+        ImVec4 clearColor{ 0, 0, 0, 0 };
+
+        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its
+        // code to learn more about Dear ImGui!).
+        if (showDemoWindow)
+        {
+            ImGui::ShowDemoWindow(&showDemoWindow);
+        }
+
+        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+        {
+            static float f     = 0.0f;
+            static int counter = 0;
+
+            ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+
+            ImGui::Text("This is some useful text.");        // Display some text (you can use a format strings too)
+            ImGui::Checkbox("Demo Window", &showDemoWindow); // Edit bools storing our window open/close state
+            ImGui::Checkbox("Another Window", &showAnotherWindow);
+
+            ImGui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
+            ImGui::ColorEdit3("clear color", (float*) &showAnotherWindow); // Edit 3 floats representing a color
+
+            if (ImGui::Button(
+                    "Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
+            {
+                counter++;
+            }
+            ImGui::SameLine();
+            ImGui::Text("counter = %d", counter);
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+            ImGui::End();
+        }
+
+        // 3. Show another simple window.
+        if (showAnotherWindow)
+        {
+            ImGui::Begin("Another Window",
+                         &showAnotherWindow); // Pass a pointer to our bool variable (the window will have a closing
+                                              // button that will clear the bool when clicked)
+            ImGui::Text("Hello from another window!");
+            if (ImGui::Button("Close Me"))
+            {
+                showAnotherWindow = false;
+            }
+            ImGui::End();
+        }
+
+        // Rendering
+        ImGui::Render();
+        ImDrawData* draw_data   = ImGui::GetDrawData();
+        const bool is_minimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
+
+        SDL_GPUCommandBuffer* command_buffer = SDL_AcquireGPUCommandBuffer(_device); // Acquire a GPU command buffer
+
+        SDL_GPUTexture* swapchain_texture;
+        SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer, _window, &swapchain_texture, nullptr,
+                                              nullptr); // Acquire a swapchain texture
+
+        if (swapchain_texture != nullptr && !is_minimized)
+        {
+            // This is mandatory: call ImGui_ImplSDLGPU3_PrepareDrawData() to upload the vertex/index buffer!
+            ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, command_buffer);
+
+            // Setup and start a render pass
+            SDL_GPUColorTargetInfo target_info = {};
+            target_info.texture                = swapchain_texture;
+            target_info.clear_color            = SDL_FColor{ clearColor.x, clearColor.y, clearColor.z, clearColor.w };
+            target_info.load_op                = SDL_GPU_LOADOP_CLEAR;
+            target_info.store_op               = SDL_GPU_STOREOP_STORE;
+            target_info.mip_level              = 0;
+            target_info.layer_or_depth_plane   = 0;
+            target_info.cycle                  = false;
+            SDL_GPURenderPass* render_pass     = SDL_BeginGPURenderPass(command_buffer, &target_info, 1, nullptr);
+
+            // Render ImGui
+            ImGui_ImplSDLGPU3_RenderDrawData(draw_data, command_buffer, render_pass);
+
+            SDL_EndGPURenderPass(render_pass);
+        }
+
+        // Submit the command buffer
+        SDL_SubmitGPUCommandBuffer(command_buffer);
+    }
 
     void Application::run() noexcept
     {
@@ -135,38 +250,7 @@ namespace rasterizer
             /// +---------------------------------------------------------------------------------------+
             /// |                                 DEAR IMGUI                                            |
             /// +---------------------------------------------------------------------------------------+
-            // (After event loop)
-            // Start the Dear ImGui frame
-            ImGui_ImplSDLGPU3_NewFrame();
-            ImGui_ImplSDL3_NewFrame();
-            ImGui::NewFrame();
-            ImGui::ShowDemoWindow(); // Show demo window! :)
-
-            // Rendering
-            // (Your code clears your framebuffer, renders your other stuff etc.)
-            ImGui::Render();
-
-            SDL_GPUCommandBuffer* commandBuffer = SDL_AcquireGPUCommandBuffer(_device); // Acquire a GPU command buffer
-            SDL_GPUTexture* swapchainTexture;
-            SDL_WaitAndAcquireGPUSwapchainTexture(commandBuffer, _window, &swapchainTexture, nullptr,
-                                                             nullptr); // Acquire a swapchain texture
-            ImGui_ImplSDLGPU3_PrepareDrawData(ImGui::GetDrawData(), commandBuffer);
-
-            // Setup and start a render pass
-            SDL_GPUColorTargetInfo target_info = {};
-            target_info.texture                = swapchainTexture;
-            target_info.clear_color            = SDL_FColor{ .r = 0, .g = 0, .b = 0, .a = 1.0f };
-            target_info.load_op                = SDL_GPU_LOADOP_CLEAR;
-            target_info.store_op               = SDL_GPU_STOREOP_STORE;
-            target_info.mip_level              = 0;
-            target_info.layer_or_depth_plane   = 0;
-            target_info.cycle                  = false;
-            SDL_GPURenderPass* render_pass     = SDL_BeginGPURenderPass(commandBuffer, &target_info, 1, nullptr);
-
-            // Render ImGui
-            ImGui_ImplSDLGPU3_RenderDrawData(ImGui::GetDrawData(), commandBuffer, render_pass);
-
-            SDL_EndGPURenderPass(render_pass);
+            // renderImgui();
         }
 
 
